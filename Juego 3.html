@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Juego de memoria</title>
+</head>
+<body>
+    <script>
+class JuegoMemoria { 
+  constructor() {
+    this.preguntasDisponibles = [
+      { pregunta: "¿Cuál es el sistema numérico usado en informática?", respuesta: "Binario" },
+      { pregunta: "¿Cuánto es 2^3?", respuesta: "8" },
+      { pregunta: "¿Cuál es la base del sistema hexadecimal?", respuesta: "16" },
+      { pregunta: "¿Qué lenguaje se usa para estilos en la web?", respuesta: "CSS" },
+      { pregunta: "¿Cuánto es la raíz cuadrada de 81?", respuesta: "9" },
+      { pregunta: "¿Qué significa RAM?", respuesta: "Memoria de acceso aleatorio" },
+      { pregunta: "¿Qué es un algoritmo?", respuesta: "Un conjunto de pasos" },
+      { pregunta: "¿Qué mide un bit?", respuesta: "Información" },
+      { pregunta: "¿Quién fundó Microsoft?", respuesta: "Bill Gates" },
+      { pregunta: "¿Cuál es el sistema operativo de Apple?", respuesta: "macOS" }
+    ];
+    this.cartas = [];
+    this.intentos = 0;
+    this.seleccionadas = [];
+    this.inicializarJuego();
+  }
+
+  inicializarJuego() {
+    this.pares = this.preguntasDisponibles.sort(() => Math.random() - 0.5).slice(0, 6);
+    this.cartas = [...this.pares.map(p => ({ ...p, tipo: 'pregunta' })),
+                   ...this.pares.map(p => ({ ...p, texto: p.respuesta, tipo: 'respuesta' }))]
+      .sort(() => Math.random() - 0.5)
+      .map((item, index) => ({ id: index, texto: item.texto || item.pregunta, tipo: item.tipo, emparejado: false }));
+    this.intentos = 0;
+    this.seleccionadas = [];
+    this.mostrarCartas(true);
+    
+    setTimeout(() => {
+      this.ocultarCartas();
+    }, 3000);
+  }
+
+  mostrarCartas(revelar = false) {
+    const contenedor = document.getElementById("juego");
+    contenedor.innerHTML = "";
+    
+    this.cartas.forEach((carta, index) => {
+      let div = document.createElement("div");
+      div.className = `carta ${revelar ? "carta-volteada" : ""}`;
+      div.innerHTML = `<div class='carta-inner'>
+                         <div class='carta-front'>?</div>
+                         <div class='carta-back'>${carta.texto}</div>
+                       </div>`;
+      div.onclick = () => this.seleccionarCarta(index, div);
+      contenedor.appendChild(div);
+    });
+    
+    document.getElementById("intentos").innerText = `Intentos: ${this.intentos}`;
+  }
+
+  ocultarCartas() {
+    document.querySelectorAll(".carta").forEach(carta => {
+      carta.classList.remove("carta-volteada");
+    });
+  }
+
+  seleccionarCarta(indice, div) {
+    if (this.seleccionadas.length === 1 && this.seleccionadas[0].indice === indice) {
+      return;
+    }
+    
+    this.seleccionadas.push({ indice, div });
+    div.classList.add("carta-volteada");
+    
+    if (this.seleccionadas.length === 2) {
+      this.intentos++;
+      document.getElementById("intentos").innerText = `Intentos: ${this.intentos}`;
+      let [seleccion1, seleccion2] = this.seleccionadas;
+      let carta1 = this.cartas[seleccion1.indice];
+      let carta2 = this.cartas[seleccion2.indice];
+      
+      let parEncontrado = this.pares.some(par => 
+        (par.pregunta === carta1.texto && par.respuesta === carta2.texto) ||
+        (par.respuesta === carta1.texto && par.pregunta === carta2.texto)
+      );
+      
+      setTimeout(() => {
+        if (!parEncontrado) {
+          seleccion1.div.classList.remove("carta-volteada");
+          seleccion2.div.classList.remove("carta-volteada");
+        } else {
+          carta1.emparejado = true;
+          carta2.emparejado = true;
+          seleccion1.div.style.pointerEvents = "none";
+          seleccion2.div.style.pointerEvents = "none";
+          
+          seleccion1.div.querySelector(".carta-back").innerHTML = `${carta1.texto} ✔️`;
+          seleccion2.div.querySelector(".carta-back").innerHTML = `${carta2.texto} ✔️`;
+        }
+        this.seleccionadas = [];
+        this.verificarVictoria();
+      }, 1000);
+    }
+  }
+
+  verificarVictoria() {
+    if (this.cartas.every(carta => carta.emparejado)) {
+      setTimeout(() => {
+        alert("¡Felicidades 🎉🎉! Has encontrado todas las parejas.");
+        this.inicializarJuego();
+      }, 500);
+    }
+  }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  document.head.innerHTML += `<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/css/bootstrap.min.css">
+    <style>
+      #juego { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; justify-content: center; margin-top: 20px; }
+      .carta { width: 120px; height: 80px; perspective: 1000px; }
+      .carta-inner { width: 100%; height: 100%; text-align: center; transition: transform 0.5s; transform-style: preserve-3d; }
+      .carta-volteada .carta-inner { transform: rotateY(180deg); }
+      .carta-front, .carta-back { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; display: flex; align-items: center; justify-content: center; font-size: 14px; padding: 5px; }
+      .carta-front { background: #007bff; color: white; }
+      .carta-back { background: #ffc107; transform: rotateY(180deg); }
+    </style>`;
+
+  document.body.innerHTML = `
+    <div class="container text-center mt-5">
+      <h1 class="mb-3">Jueguito de Memoria :3</h1>
+      <p class="mb-4">Encuentra las parejas de preguntas y respuestas</p>
+      <div id="juego"></div>
+      <p id="intentos" class="mt-3">Intentos: 0</p>
+      <button class="btn btn-danger mt-3" onclick="window.juego.inicializarJuego()">Reiniciar Juego</button>
+    </div>
+  `;
+  window.juego = new JuegoMemoria();
+});
+
+      </script>
+    
+</body>
+</html>

@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Juego de Hackeo Matemático</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #fff;
+            color: #333;
+            text-align: center;
+            font-family: 'Arial', sans-serif;
+            padding: 20px;
+        }
+        .game-container {
+            max-width: 600px;
+            margin: auto;
+        }
+        .math-display {
+            background-color: #f8f9fa;
+            padding: 20px;
+            font-size: 24px;
+            border-radius: 5px;
+            border: 2px solid #007bff;
+        }
+        .input-field {
+            margin-top: 10px;
+            font-size: 18px;
+            text-align: center;
+            width: 100%;
+            padding: 5px;
+            background-color: #e9ecef;
+            color: #000;
+            border: 1px solid #007bff;
+        }
+        .win-message, .lose-message {
+            display: none;
+            font-size: 24px;
+            margin-top: 20px;
+            color: #28a745;
+        }
+        .timer {
+            font-size: 20px;
+            margin-top: 10px;
+            color: red;
+        }
+        .explosion {
+            display: none;
+            width: 100px;
+            height: 100px;
+            margin: 20px auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Simulador de Hackeo Matemático 7u7</h1>
+    <p>Resuelve la operación antes de que se acabe el tiempo y explotes 💀</p>
+    <div class="game-container">
+        <div class="math-display" id="mathDisplay"></div>
+        <div class="timer" id="timer">Tiempo restante: 10s</div>
+        <input type="text" id="inputField" class="input-field" placeholder="Escribe la respuesta" oninput="checkInput()">
+    </div>
+    <div class="win-message" id="winMessage">
+        <p>¡Hackeo exitoso! 🎉</p>
+        <button class="btn btn-success" onclick="startGame()">Volver a intentarlo</button>
+    </div>
+    <div class="lose-message" id="loseMessage">
+        <img src="https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExdjFxdm5uczZ0azVsdnRsdjNpY2x6YWVjdjNyaTFjYTB4bDU1N3U2eiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/d4aVHC1HKnButuXC/giphy.gif" class="explosion" id="explosion">
+        <p id="loseText">💀¡Autodestrucción activada!💀</p>
+        <button class="btn btn-danger" onclick="startGame()">Volver a intentarlo</button>
+    </div>
+
+    <script>
+        let currentAnswer = 0;
+        let timeLeft = 10;
+        let timerInterval;
+        const loseMessages = [
+            "💀¡Autodestrucción activada!💀", 
+            "🔥¡El sistema ha colapsado!🔥", 
+            "💣¡Booom! Has perdido...💣", 
+            "🚨¡Hackeo fallido!🚨", 
+            "🛑¡Código erróneo! Acceso denegado...🛑", 
+            "💻¡Virus detectado! El sistema se bloqueó...💻", 
+            "⚠️¡Error 404: Inteligencia no encontrada!⚠️", 
+            "😵¡El servidor explotó en llamas!🔥", 
+            "🔒¡La seguridad te ha atrapado!🔒", 
+            "❌¡Game Over! Vuelve a intentarlo...❌"
+        ];
+
+        function generateMathProblem() {
+            let num1 = Math.floor(Math.random() * 10) + 1;
+            let num2 = Math.floor(Math.random() * 10) + 1;
+            let operators = ['+', '-', '*'];
+            let operator = operators[Math.floor(Math.random() * operators.length)];
+
+            currentAnswer = eval(`${num1} ${operator} ${num2}`);
+            return `${num1} ${operator} ${num2} = ?`;
+        }
+
+        function startGame() {
+            document.getElementById("winMessage").style.display = "none";
+            document.getElementById("loseMessage").style.display = "none";
+            document.getElementById("explosion").style.display = "none";
+            document.getElementById("inputField").value = "";
+            document.getElementById("mathDisplay").textContent = generateMathProblem();
+            timeLeft = 10;
+            document.getElementById("timer").textContent = `Tiempo restante: ${timeLeft}s`;
+            clearInterval(timerInterval);
+            timerInterval = setInterval(updateTimer, 1000);
+        }
+
+        function updateTimer() {
+            timeLeft--;
+            document.getElementById("timer").textContent = `Tiempo restante: ${timeLeft}s`;
+            if (timeLeft === 0) {
+                clearInterval(timerInterval);
+                document.getElementById("loseMessage").style.display = "block";
+                document.getElementById("explosion").style.display = "block";
+                document.getElementById("loseText").innerHTML = loseMessages[Math.floor(Math.random() * loseMessages.length)];
+            }
+        }
+
+        function checkInput() {
+            const userInput = document.getElementById("inputField").value;
+            if (parseInt(userInput) === currentAnswer) {
+                clearInterval(timerInterval);
+                document.getElementById("winMessage").style.display = "block";
+            }
+        }
+
+        startGame();
+    </script>
+</body>
+</html>
